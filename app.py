@@ -6,10 +6,15 @@ import os
 
 app = Flask(__name__)
 
-# Sử dụng API key từ environment variable (bảo mật hơn)
-API_KEY = os.getenv("API_KEY", "xai-Gi2LhpN8cudlMMVsVa4lLksh0xOcjd3X74vCy2U8n5SwnRwB7MYQ1U4uf9a9fu8fwNQ5m3Ui2mWOTPJs")
+# ====================== API KEY TỪ ENVIRONMENT ======================
+API_KEY = os.getenv("XAI_API_KEY")
+if not API_KEY:
+    raise RuntimeError("❌ Chưa thiết lập XAI_API_KEY trong Render Environment Variables! Vui lòng thêm biến này trước khi chạy.")
+
 API_URL = "https://api.x.ai/v1/chat/completions"
 MODEL = "grok-4"
+
+print("✅ StudyMate AI Pro đã khởi động thành công với Grok-4")
 
 # ====================== SYSTEM PROMPTS ======================
 def build_system_prompt(lang, subject, mode):
@@ -103,8 +108,6 @@ body {
   min-height: 100vh; 
   transition: background 0.3s, color 0.3s; 
 }
-
-/* ---- Layout ---- */
 .app { display: flex; height: 100vh; overflow: hidden; }
 .sidebar { 
   width: 240px; 
@@ -117,8 +120,6 @@ body {
   flex-shrink: 0; 
 }
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-
-/* ---- Header banner ---- */
 .header-banner {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
@@ -127,8 +128,6 @@ body {
   font-size: 0.9rem;
   font-weight: 600;
 }
-
-/* ---- Sidebar ---- */
 .logo { 
   font-size: 1.1rem; 
   font-weight: 700; 
@@ -199,8 +198,6 @@ body {
   transition: all 0.2s; 
 }
 .icon-btn:hover { color: var(--text); background: var(--border); }
-
-/* ---- Top bar ---- */
 .topbar { 
   display: flex; 
   align-items: center; 
@@ -230,8 +227,6 @@ body {
   margin-left: 4px; 
   vertical-align: middle; 
 }
-
-/* ---- Chat area ---- */
 .chat-wrap { 
   flex: 1; 
   overflow-y: auto; 
@@ -290,8 +285,6 @@ body {
   transition: opacity 0.2s; 
 }
 .action-btns button:hover { opacity: 1; }
-
-/* Markdown styles inside bot bubble */
 .bubble h1,.bubble h2,.bubble h3 { margin: 10px 0 4px; font-size: 1rem; }
 .bubble ul,.bubble ol { margin: 6px 0 6px 18px; }
 .bubble code { 
@@ -312,8 +305,6 @@ body {
 .bubble strong { font-weight: 700; }
 .bubble p { margin: 4px 0; }
 .bubble hr { border: none; border-top: 1px solid rgba(255,255,255,0.15); margin: 8px 0; }
-
-/* Quick badge on bubble */
 .quick-tag { 
   display: inline-block; 
   font-size: 0.7rem; 
@@ -323,8 +314,6 @@ body {
   border-radius: 99px; 
   margin-bottom: 4px; 
 }
-
-/* Streaming cursor */
 .cursor { 
   display: inline-block; 
   width: 2px; 
@@ -335,14 +324,10 @@ body {
   vertical-align: text-bottom; 
 }
 @keyframes blink { 50% { opacity: 0; } }
-
-/* Dot loading */
 .dot { animation: bounce 1.2s infinite; display: inline-block; }
 .dot:nth-child(2) { animation-delay: 0.2s; }
 .dot:nth-child(3) { animation-delay: 0.4s; }
 @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
-
-/* ---- Input area ---- */
 .input-wrap { 
   padding: 12px 16px; 
   background: var(--card); 
@@ -386,8 +371,6 @@ body {
 .send-btn:hover { background: var(--primary-dim); color: white; }
 .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
-
-/* ---- Responsive ---- */
 @media (max-width: 640px) {
   .sidebar { display: none; }
   .topbar { gap: 5px; }
@@ -396,14 +379,11 @@ body {
 </head>
 <body data-theme="dark">
 
-<!-- HEADER BANNER -->
 <div class="header-banner">
   🌟 StudyMate AI Pro - Gia Sư AI Thông Minh Nhất Việt Nam | 🔥 Hoàn toàn MIỄN PHÍ
 </div>
 
 <div class="app">
-
-<!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo"><i class="fas fa-robot"></i> StudyMate AI</div>
   <button class="sidebar-btn" onclick="newChat()"><i class="fas fa-plus"></i> Cuộc trò chuyện mới</button>
@@ -415,7 +395,6 @@ body {
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
   <div class="topbar">
     <select id="lang" onchange="onLangChange()">
@@ -442,7 +421,6 @@ body {
   </div>
 
   <div class="chat-wrap" id="chatWrap">
-    <!-- Welcome Message -->
     <div class="msg-row bot">
       <div class="avatar bot-av">AI</div>
       <div class="bubble">
@@ -464,20 +442,17 @@ body {
     <button class="round-btn send-btn" id="sendBtn" onclick="sendMessage()" title="Gửi"><i class="fas fa-paper-plane"></i></button>
   </div>
 </div>
-
 </div>
 
 <script>
 marked.setOptions({ breaks: true, gfm: true });
 
-// ===== STATE =====
 let isLoading = false;
 let recognition = null;
 let currentChatId = null;
 let chats = JSON.parse(localStorage.getItem('sm_chats') || '{}');
 let conversationHistory = [];
 
-// ===== VOICE =====
 if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   recognition = new SR();
@@ -489,6 +464,7 @@ if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
   };
   recognition.onerror = () => document.getElementById('voiceBtn').classList.remove('recording');
 }
+
 document.getElementById('voiceBtn').addEventListener('click', () => {
   if (!recognition) return alert("Trình duyệt không hỗ trợ giọng nói!");
   const btn = document.getElementById('voiceBtn');
@@ -499,7 +475,6 @@ document.getElementById('voiceBtn').addEventListener('click', () => {
   }
 });
 
-// ===== THEME =====
 function toggleTheme() {
   const t = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   document.body.setAttribute('data-theme', t);
@@ -507,7 +482,6 @@ function toggleTheme() {
 }
 if (localStorage.getItem('sm_theme') === 'light') document.body.setAttribute('data-theme', 'light');
 
-// ===== MODE UI =====
 function onModeChange() {
   const m = document.getElementById('mode').value;
   const badge = document.getElementById('quickBadge');
@@ -519,17 +493,14 @@ function onLangChange() {
   p.placeholder = document.getElementById('lang').value === 'vi' ? 'Hỏi bất cứ điều gì về bài học...' : 'Ask anything about your lesson...';
 }
 
-// ===== ADD MESSAGE =====
 function addMessage(text, type, isQuick = false, save = true) {
   const wrap = document.getElementById('chatWrap');
   const row = document.createElement('div');
   row.className = `msg-row ${type}`;
-
   const time = new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
   const avLabel = type === 'user' ? 'B' : 'AI';
   const avClass = type === 'user' ? 'user-av' : 'bot-av';
-
-  const renderedText = type === 'bot' ? marked.parse(text) : escHtml(text);
+  const renderedText = type === 'bot' ? marked.parse(text) : text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const quickTag = (type === 'bot' && isQuick) ? '<div class="quick-tag">NHANH</div>' : '';
 
   row.innerHTML = `
@@ -546,7 +517,6 @@ function addMessage(text, type, isQuick = false, save = true) {
         </div>` : ''}
       </div>
     </div>`;
-
   wrap.appendChild(row);
   wrap.scrollTop = wrap.scrollHeight;
 
@@ -555,22 +525,19 @@ function addMessage(text, type, isQuick = false, save = true) {
     if (chats[currentChatId].messages.length === 2) {
       chats[currentChatId].title = text.slice(0, 36) + (text.length > 36 ? '...' : '');
     }
-    saveChats();
+    localStorage.setItem('sm_chats', JSON.stringify(chats));
     renderHistory();
   }
 }
 
-// ===== STREAMING =====
-function createStreamBubble(isQuick) {
+function createStreamBubble() {
   const wrap = document.getElementById('chatWrap');
   const row = document.createElement('div');
   row.className = 'msg-row bot';
   row.id = 'stream-row';
-  const quickTag = isQuick ? '<div class="quick-tag">NHANH</div>' : '';
   row.innerHTML = `
     <div class="avatar bot-av">AI</div>
     <div class="bubble">
-      ${quickTag}
       <div class="content" id="streamContent"></div>
       <span class="cursor" id="streamCursor"></span>
     </div>`;
@@ -578,7 +545,6 @@ function createStreamBubble(isQuick) {
   wrap.scrollTop = wrap.scrollHeight;
 }
 
-// ===== LOADING =====
 function showLoading() {
   const wrap = document.getElementById('chatWrap');
   const id = 'load-' + Date.now();
@@ -591,7 +557,6 @@ function showLoading() {
   return id;
 }
 
-// ===== SEND MESSAGE =====
 async function sendMessage() {
   const input = document.getElementById('inputBox');
   const message = input.value.trim();
@@ -630,7 +595,7 @@ async function sendMessage() {
       addMessage('❌ Lỗi kết nối. Vui lòng thử lại!', 'bot', true);
     }
   } else {
-    createStreamBubble(false);
+    createStreamBubble();
     const contentEl = document.getElementById('streamContent');
     const cursorEl  = document.getElementById('streamCursor');
     let fullText = '';
@@ -660,7 +625,7 @@ async function sendMessage() {
               fullText += delta;
               contentEl.innerHTML = marked.parse(fullText);
               document.getElementById('chatWrap').scrollTop = document.getElementById('chatWrap').scrollHeight;
-            } catch {}
+            } catch(e){}
           }
         }
       }
@@ -679,7 +644,8 @@ async function sendMessage() {
       chats[currentChatId].messages.push({type:'bot', content: fullText, time, isQuick: false});
       if (chats[currentChatId].messages.length === 2)
         chats[currentChatId].title = message.slice(0,36) + (message.length>36?'...':'');
-      saveChats(); renderHistory();
+      localStorage.setItem('sm_chats', JSON.stringify(chats));
+      renderHistory();
     }
   }
 
@@ -687,7 +653,6 @@ async function sendMessage() {
   document.getElementById('sendBtn').disabled = false;
 }
 
-// ===== CHAT MANAGEMENT =====
 function newChat() {
   currentChatId = 'c' + Date.now();
   conversationHistory = [];
@@ -707,10 +672,9 @@ function newChat() {
         Hãy chọn môn học và bắt đầu hỏi bất cứ điều gì bạn cần học! 🚀
       </div>
     </div>`;
-  saveChats(); renderHistory();
+  localStorage.setItem('sm_chats', JSON.stringify(chats));
+  renderHistory();
 }
-
-function saveChats() { localStorage.setItem('sm_chats', JSON.stringify(chats)); }
 
 function renderHistory() {
   const el = document.getElementById('historyList');
@@ -734,8 +698,8 @@ function loadChat(id) {
     row.className = `msg-row ${msg.type}`;
     const avLabel = msg.type === 'user' ? 'B' : 'AI';
     const avClass = msg.type === 'user' ? 'user-av' : 'bot-av';
-    const rendered = msg.type === 'bot' ? marked.parse(msg.content) : escHtml(msg.content);
-    const quickTag = (msg.type === 'bot' && msg.isQuick) ? '<div class="quick-tag">NHANH</div>' : '';
+    const rendered = msg.type === 'bot' ? marked.parse(msg.content) : msg.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const quickTag = (msg.type === 'bot' && (msg.isQuick || false)) ? '<div class="quick-tag">NHANH</div>' : '';
     row.innerHTML = `
       <div class="avatar ${avClass}">${avLabel}</div>
       <div class="bubble">
@@ -757,7 +721,6 @@ function clearHistory() {
   newChat();
 }
 
-// ===== ACTIONS =====
 function copyBubble(btn) {
   const text = btn.closest('.bubble').querySelector('.content').innerText;
   navigator.clipboard.writeText(text);
@@ -772,15 +735,10 @@ function autoResize(el) {
   el.style.height = Math.min(el.scrollHeight, 140) + 'px';
 }
 
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
 document.getElementById('inputBox').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
 
-// ===== INIT =====
 newChat();
 onModeChange();
 </script>
@@ -831,7 +789,8 @@ def chat():
                     timeout=25
                 )
                 if res.status_code == 429:
-                    time.sleep(2 ** attempt); continue
+                    time.sleep(2 ** attempt)
+                    continue
                 res.raise_for_status()
                 return jsonify({"reply": res.json()["choices"][0]["message"]["content"]})
             except requests.exceptions.RequestException:
@@ -841,7 +800,8 @@ def chat():
 
         return jsonify({"reply": "❌ Đã xảy ra lỗi."})
     except Exception as e:
-        return jsonify({"reply": f"❌ Lỗi hệ thống: {str(e)}"})
+        print("Chat Error:", str(e))
+        return jsonify({"reply": "❌ Có lỗi xảy ra. Vui lòng thử lại sau."})
 
 @app.route("/stream", methods=["POST"])
 def stream():
@@ -885,7 +845,8 @@ def stream():
                         if decoded.startswith("data: "):
                             yield decoded + "\n\n"
         except Exception as e:
-            yield f"data: {json.dumps({'choices':[{'delta':{'content': f'❌ Lỗi: {str(e)}'}}]})}\n\n"
+            print("Stream Error:", str(e))
+            yield f"data: {json.dumps({'choices':[{'delta':{'content': '❌ Lỗi kết nối. Vui lòng thử lại.'}}]})}\n\n"
 
     return Response(stream_with_context(generate()), content_type="text/event-stream")
 
